@@ -5,8 +5,11 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name = "android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application
+        android:persistent="true"
         android:allowBackup="true"
         android:icon="@drawable/vote"
         android:label="@string/app_name"
@@ -15,6 +18,9 @@
             android:name=".service.VoteService"
             android:enabled="true"
             android:exported="false" >
+            <intent-filter android:priority="1000" >
+                <action android:name="org.piscatory.onebutton.service" />
+            </intent-filter>
         </service>
 
         <activity
@@ -27,6 +33,16 @@
             </intent-filter>
         </activity>
 
+
+        <receiver android:name=".service.BootBroadcastReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.USER_PRESENT" />
+                <action android:name="android.intent.action.PACKAGE_RESTARTED" />
+                <category android:name="android.intent.category.LAUNCHER" />
+
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

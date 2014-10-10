@@ -23,9 +23,7 @@
     <string name="label_vote_status">状态:</string>
 
 
-    <string name="text_area_intro">
-        www.baidu.com
-    </string>
+
     <string name="label_network_status">网络连接状态:</string>
     <string name="label_vote_count_total">累计投票数:</string>
     <string name="label_server_return">服务器返回:</string>
@@ -37,5 +35,6 @@
     <string name="label_vote_speed">投票速度:</string>
     <string name="label_vote_delay_android">安卓渠道等待时间:</string>
     <string name="label_vote_delay_ios">iOS渠道等待时间:</string>
+    <string name="zero">0</string>
 
 </resources>

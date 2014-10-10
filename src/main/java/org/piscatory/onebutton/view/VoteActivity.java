@@ -1,184 +1,161 @@
 package org.piscatory.onebutton.view;
 
-import android.app.ActionBar;
 import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
-import android.support.v13.app.FragmentPagerAdapter;
-import android.support.v4.view.ViewPager;
+//import android.support.v4.view.VelocityTrackerCompat;
+import android.view.MotionEvent;
+import android.view.VelocityTracker;
 import android.view.View;
-import android.widget.ToggleButton;
+import android.view.Window;
+import android.widget.TextView;
 
+import org.piscatory.onebutton.Constants;
 import org.piscatory.onebutton.R;
 import org.piscatory.onebutton.Utils;
 import org.piscatory.onebutton.service.VoteService;
 
-import java.util.Locale;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 
-public class VoteActivity extends Activity implements ActionBar.TabListener {
+public class VoteActivity extends Activity {
     // UI elements
-    private ToggleButton toggleButton;
+    private TextView textViewCount;
+    private TextView textViewGesture;
+
+    private IntentFilter voteActionFilter = new IntentFilter(Constants.VOTE_STATUS_UPDATE_ACTION);
+    private VoteStatusReceiver voteStatusReceiver = new VoteStatusReceiver();
+    private IntentFilter proxyActionFilter = new IntentFilter(Constants.PROXY);
+    private ProxyChangeReceiver proxyChangeReceiver = new ProxyChangeReceiver();
+
+    private String currentLocation;
+    private String currentVoteCount;
+    private String currentSpeed;
+
+    private boolean changingSpeed = false;
+
+    private VelocityTracker mVelocityTracker = null;
 
 
-    /**
-     * The {@link android.support.v4.view.PagerAdapter} that will provide
-     * fragments for each of the sections. We use a
-     * {@link FragmentPagerAdapter} derivative, which will keep every
-     * loaded fragment in memory. If this becomes too memory intensive, it
-     * may be best to switch to a
-     * {@link android.support.v13.app.FragmentStatePagerAdapter}.
-     */
-    SectionsPagerAdapter mSectionsPagerAdapter;
+    private Intent speedChangeIntent;
 
-    /**
-     * The {@link ViewPager} that will host the section contents.
-     */
-    ViewPager mViewPager;
+    NumberFormat formatter = new DecimalFormat("#0");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_vote);
-        this.toggleButton = (ToggleButton) this.findViewById(R.id.toggleButton);
-        // Set up the action bar.
-        final ActionBar actionBar = getActionBar();
-        assert actionBar != null;
-        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
-
-       // Create the adapter that will return a fragment for each of the three
-        // primary sections of the activity.
-        mSectionsPagerAdapter = new SectionsPagerAdapter(getFragmentManager());
-
-        // Set up the ViewPager with the sections adapter.
-        mViewPager = (ViewPager) findViewById(R.id.pager);
-        mViewPager.setAdapter(mSectionsPagerAdapter);
-        mViewPager.setOffscreenPageLimit(4);
-
-        // When swiping between different sections, select the corresponding
-        // tab. We can also use ActionBar.Tab#select() to do this if we have
-        // a reference to the Tab.
-        mViewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
-            @Override
-            public void onPageSelected(int position) {
-                actionBar.setSelectedNavigationItem(position);
-            }
-        });
-
-        // For each of the sections in the app, add a tab to the action bar.
-        for (int i = 0; i < mSectionsPagerAdapter.getCount(); i++) {
-            // Create a tab with text corresponding to the page title defined by
-            // the adapter. Also specify this Activity object, which implements
-            // the TabListener interface, as the callback (listener) for when
-            // this tab is selected.
-            actionBar.addTab(
-                    actionBar.newTab()
-                            .setText(mSectionsPagerAdapter.getPageTitle(i))
-                            .setTabListener(this));
-        }
-    }
-
-
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.vote, menu);
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        // Handle action bar item clicks here. The action bar will
-//        // automatically handle clicks on the Home/Up button, so long
-//        // as you specify a parent activity in AndroidManifest.xml.
-//        int id = item.getItemId();
-//        if (id == R.id.action_settings) {
-//            return true;
-//        }
-//        return super.onOptionsItemSelected(item);
-//    }
-
-    @Override
-    public void onTabSelected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
-        // When the given tab is selected, switch to the corresponding page in
-        // the ViewPager.
-        mViewPager.setCurrentItem(tab.getPosition());
-    }
-
-    @Override
-    public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
-    }
-
-    @Override
-    public void onTabReselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
-    }
-
-
-    /**
-     * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
-     * one of the sections/tabs/pages.
-     */
-    public class SectionsPagerAdapter extends FragmentPagerAdapter {
-
-        public SectionsPagerAdapter(FragmentManager fm) {
-            super(fm);
-        }
-
-        @Override
-        public Fragment getItem(int position) {
-            // getItem is called to instantiate the fragment for the given page.
-            // Return a PlaceholderFragment (defined as a static inner class below).
-            switch (position) {
-                case 0:
-                    return new ExplainFragment();
-                case 1:
-                    return new StatusFragment();
-                case 2:
-                    return new SettingFragment();
-                case 3:
-                    return new LoggingFragment();
-
-            }
-            return null;
-        }
-
-        @Override
-        public int getCount() {
-            // Show 3 total pages.
-            return 4;
-        }
-
-        @Override
-        public CharSequence getPageTitle(int position) {
-            Locale l = Locale.getDefault();
-            switch (position) {
-                case 0:
-                    return getString(R.string.title_section1).toUpperCase(l);
-                case 1:
-                    return getString(R.string.title_section2).toUpperCase(l);
-                case 2:
-                    return getString(R.string.title_section3).toUpperCase(l);
-                case 3:
-                    return getString(R.string.title_section4).toUpperCase(l);
-            }
-            return null;
-        }
-    }
-    public void toggleVote(View view) {
-
-        if (((ToggleButton) view).isChecked()) {
+        textViewCount = (TextView) this.findViewById(R.id.textViewCount);
+        textViewGesture = (TextView) this.findViewById(R.id.textViewGesture);
+        if (!Utils.isMyServiceRunning(VoteService.class, this)) {
             this.startService(new Intent(this, VoteService.class));
         } else {
-            this.stopService(new Intent(this, VoteService.class));
+            textViewCount.setText(""+VoteService.getService().getVoteCount());
+        }
+        SharedPreferences sp = getSharedPreferences("VOTE", 0);
+        currentSpeed = sp.getInt("DELAY", 60000) + "";
+        textViewGesture.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                int index = motionEvent.getActionIndex();
+                int action = motionEvent.getActionMasked();
+                int pointerId = motionEvent.getPointerId(index);
+
+                switch (action) {
+                    case (MotionEvent.ACTION_DOWN):
+                        changingSpeed = true;
+                        textViewCount.setText(currentSpeed);
+                        if (mVelocityTracker == null) {
+                            // Retrieve a new VelocityTracker object to watch the velocity of a motion.
+                            mVelocityTracker = VelocityTracker.obtain();
+                        } else {
+                            // Reset the velocity tracker back to its initial state.
+                            mVelocityTracker.clear();
+                        }
+                        // Add a user's movement to the tracker.
+                        mVelocityTracker.addMovement(motionEvent);
+                        return true;
+                    case (MotionEvent.ACTION_MOVE):
+                        mVelocityTracker.addMovement(motionEvent);
+                        // When you want to determine the velocity, call
+                        // computeCurrentVelocity(). Then call getXVelocity()
+                        // and getYVelocity() to retrieve the velocity for each pointer ID.
+                        mVelocityTracker.computeCurrentVelocity(100);
+                        // Log velocity of pixels per second
+                        // Best practice to use VelocityTrackerCompat where possible.
+                        float tmp = Float.parseFloat(currentSpeed);
+                        tmp -= mVelocityTracker.getYVelocity(pointerId);
+                        if (tmp < 0) {
+                            tmp = 0;
+                        }
+                        if (tmp > 100000) {
+                            tmp = 100000;
+                        }
+                        currentSpeed = "" + formatter.format(tmp);
+                        textViewCount.setText(currentSpeed);
+                        return true;
+                    case (MotionEvent.ACTION_UP):
+                        changingSpeed = false;
+                        textViewCount.setText(currentVoteCount);
+                        speedChangeIntent = new Intent(Constants.SPEED_CHANGE)
+                                .putExtra("SPEED", Integer.parseInt(currentSpeed));
+                        sendBroadcast(speedChangeIntent);
+
+                        return true;
+                    default:
+                        return onTouchEvent(motionEvent);
+                }
+            }
+        });
+    }
+
+
+    public void clickNumber(View view) {
+        if (currentLocation != null && !"".equals(currentLocation)) {
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(currentLocation));
+            startActivity(browserIntent);
         }
     }
+
 
     @Override
     protected void onResume() {
         super.onResume();
-        this.toggleButton.setChecked(Utils.isMyServiceRunning(VoteService.class, this));
+        this.registerReceiver(voteStatusReceiver, voteActionFilter);
+        this.registerReceiver(proxyChangeReceiver, proxyActionFilter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        this.unregisterReceiver(voteStatusReceiver);
+        this.unregisterReceiver(proxyChangeReceiver);
+    }
+
+    private class ProxyChangeReceiver extends  BroadcastReceiver{
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+//            textViewGesture.setText(intent.getExtras().getString("PROXY"));
+        }
+    }
+
+    private class VoteStatusReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            currentLocation = intent.getExtras().getString("LOCATION");
+            currentVoteCount = "" + intent.getExtras().getInt("VOTE_COUNT");
+            currentSpeed = ""+ intent.getExtras().getInt("SPEED");
+            if (!changingSpeed)
+                textViewCount.setText(currentVoteCount);
+        }
     }
 
 

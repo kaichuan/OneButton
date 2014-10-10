@@ -3,26 +3,33 @@
 <RelativeLayout
 android:layout_width="fill_parent"
 android:layout_height="fill_parent"
-xmlns:android="http://schemas.android.com/apk/res/android"
-xmlns:tools="http://schemas.android.com/tools">
-    <android.support.v4.view.ViewPager
-        android:id="@+id/pager"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:context="org.piscatory.onebutton.view.VoteActivity"
-        android:layout_above="@+id/toggleButton" />
-    <ToggleButton
-        android:onClick="toggleVote"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text=""
-        android:id="@+id/toggleButton"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:textOff="开始投票"
-        android:textOn="停止投票" />
+xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+
+        <TextView
+            android:clickable="true"
+            android:onClick="clickNumber"
+            android:layout_width="match_parent"
+            android:layout_height="202dp"
+            android:id="@+id/textViewCount"
+            android:textSize="96sp"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center"
+            android:text="@string/zero"
+            android:typeface="monospace" />
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:id="@+id/textViewGesture"
+            android:text="0.0.0.0"
+            android:textSize="45sp"
+            android:textIsSelectable="true"
+            android:gravity="center_vertical|center_horizontal" />
+
+    </LinearLayout>
 </RelativeLayout>
